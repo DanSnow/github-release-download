@@ -1,0 +1,13 @@
+[package]
+name = "github-release-download"
+version = "0.1.0"
+authors = ["DanSnow <dododavid006@gmail.com>"]
+edition = "2018"
+
+[dependencies]
+reqwest = "0.9.10"
+serde = { version = "1.0.89", features = ["derive"] }
+serde_json = "1.0.39"
+structopt = "0.2.14"
+skim = "0.5.5"
+indicatif = "0.11.0"
