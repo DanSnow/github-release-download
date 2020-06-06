@@ -5,7 +5,7 @@ authors = ["DanSnow <dododavid006@gmail.com>"]
 edition = "2018"
 
 [dependencies]
-indicatif = "0.11.0"
+indicatif = "0.14.0"
 reqwest = "0.9.10"
 serde = { version = "1.0.111", features = ["derive"] }
 skim = "0.6.6"
