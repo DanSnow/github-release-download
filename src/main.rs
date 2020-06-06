@@ -16,7 +16,6 @@ macro_rules! abort {
 }
 
 #[derive(Debug, StructOpt)]
-#[structopt(rename_all = "kebab")]
 struct Opt {
     #[structopt(short, long, help = "Allow pre-release version")]
     pre_release: bool,
