@@ -6,7 +6,7 @@ edition = "2018"
 
 [dependencies]
 indicatif = "0.11.0"
-reqwest = "0.9.10"
+reqwest = "0.9.24"
 serde = { version = "1.0.111", features = ["derive"] }
 skim = "0.6.6"
 structopt = "0.2.14"
