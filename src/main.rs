@@ -1,9 +1,7 @@
+use color_eyre::Result;
 use reqwest::{header, Client, StatusCode};
-use std::{
-    fs::File,
-    io::{self, Cursor},
-    process,
-};
+use skim::prelude::{bounded, Skim, SkimItem};
+use std::{fs::File, io, process, sync::Arc, thread};
 use structopt::StructOpt;
 
 mod github;
@@ -36,47 +34,60 @@ struct Opt {
     release: String,
 }
 
-fn main() {
+#[tokio::main]
+async fn main() -> Result<()> {
     let opt = Opt::from_args();
     let client = Client::new();
     let url = format!("https://api.github.com/repos/{}/releases", opt.repo);
-    let mut res = client.get(&url).send().unwrap();
+    let res = client
+        .get(&url)
+        .header(header::USER_AGENT, "reqwest 0.11.3")
+        .send()
+        .await?;
     if res.status() == StatusCode::NOT_FOUND {
         abort!("No such repo {:?}", opt.repo);
     }
-    let releases = res.json::<Vec<github::Release>>().unwrap();
+    let releases = res.json::<Vec<github::Release>>().await?;
     let release = match opt.release.as_str() {
         "latest" => find_latest_release(&releases, &opt),
         tag => find_specific_release(&releases, tag),
     };
-    let release = release.or_else(|| {
-        select_one(releases.iter().map(|release| &release.tag_name)).map(|index| &releases[index])
-    });
     match release {
-        Some(release) => match select_one(release.assets.iter().map(|asset| &asset.name)) {
-            Some(index) => {
-                let asset = &release.assets[index];
-                let output_name = opt
-                    .output
-                    .as_ref()
-                    .map(String::as_str)
-                    .unwrap_or(&asset.name);
-                download(&client, &asset.url, &asset.name, output_name);
+        Some(release) => {
+            let asset = select_one(release.assets.clone()).map(|item| {
+                (*item)
+                    .as_any()
+                    .downcast_ref::<github::Asset>()
+                    .expect("Fail to downcast asset")
+                    .clone()
+            });
+            match asset {
+                Some(asset) => {
+                    let output_name = opt
+                        .output
+                        .as_ref()
+                        .map(String::as_str)
+                        .unwrap_or(&asset.name);
+                    download(&client, &asset.url, &asset.name, output_name).await?;
+                }
+                None => (),
             }
-            None => (),
-        },
+        }
         None => {
             abort!("No matched release to download");
         }
     }
+    Ok(())
 }
 
-fn download(client: &Client, url: &str, display: &str, name: &str) {
-    let mut res = client
+async fn download(client: &Client, url: &str, display: &str, name: &str) -> Result<()> {
+    let display = display.to_owned();
+    let res = client
         .get(url)
         .header(header::ACCEPT, "application/octet-stream")
+        .header(header::USER_AGENT, "reqwest 0.11.3")
         .send()
-        .unwrap();
+        .await?;
     let len = res.headers().get(header::CONTENT_LENGTH).and_then(|value| {
         value
             .to_str()
@@ -88,28 +99,35 @@ fn download(client: &Client, url: &str, display: &str, name: &str) {
         Some(len) => {
             let progress = indicatif::ProgressBar::new(len);
             progress.set_prefix(display);
-            io::copy(&mut progress.wrap_read(&mut res), &mut f).unwrap();
+            let mut body = io::Cursor::new(res.bytes().await?);
+            io::copy(&mut progress.wrap_read(&mut body), &mut f)?;
         }
         None => {
             println!("will download: {}", display);
-            res.copy_to(&mut f).unwrap();
+            let mut body = io::Cursor::new(res.bytes().await?);
+            io::copy(&mut body, &mut f)?;
         }
     }
+    Ok(())
 }
 
-fn select_one<'a, T: AsRef<str> + 'a, I: IntoIterator<Item = &'a T>>(items: I) -> Option<usize> {
-    let input = items
+fn select_one<T: SkimItem, I: IntoIterator<Item = T>>(items: I) -> Option<Arc<dyn SkimItem>> {
+    let items = items
         .into_iter()
-        .map(<_>::as_ref)
-        .collect::<Vec<&str>>()
-        .join("\n");
-    let items = skim::Skim::run_with(
-        &skim::SkimOptions::default(),
-        Some(Box::new(Cursor::new(input))),
-    )
-    .map(|output| output.selected_items)
-    .unwrap_or_else(Vec::new);
-    items.first().map(|item| item.get_index())
+        .map(|x| Arc::new(x) as Arc<dyn SkimItem>)
+        .collect::<Vec<Arc<dyn SkimItem>>>();
+    let (tx, rx) = bounded(10240);
+    thread::spawn(move || {
+        for item in items {
+            if tx.send(item).is_err() {
+                break;
+            }
+        }
+    });
+    let items = Skim::run_with(&skim::SkimOptions::default(), Some(rx))
+        .map(|output| output.selected_items)
+        .unwrap_or_else(Vec::new);
+    items.into_iter().next()
 }
 
 fn find_latest_release<'a>(
