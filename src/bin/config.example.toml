@@ -1,0 +1,10 @@
+output = "~/Downloads" # Download path
+
+# repo config
+[[repos]]
+repo = "DanSnow/github-release-download"
+asset = "sources.tar.gz" # asset name regex
+# output = "<output name>" # output file name
+pre_release = false # allow pre-release (optional, default false)
+stable_only = falsea # allow stable only (optional, default false)
+
