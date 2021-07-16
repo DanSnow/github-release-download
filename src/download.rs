@@ -1,13 +1,10 @@
 use color_eyre::Result;
 use reqwest::{header, Client};
-use std::{
-    fs::File,
-    io::{self, Cursor, Write},
-};
+use std::{fs::File, io::Write};
 
 pub async fn download(client: &Client, url: &str, display: &str, name: &str) -> Result<()> {
     let display = display.to_owned();
-    let res = client
+    let mut res = client
         .get(url)
         .header(header::USER_AGENT, "reqwest 0.11.3")
         .header(header::ACCEPT, "application/octet-stream")
@@ -24,8 +21,11 @@ pub async fn download(client: &Client, url: &str, display: &str, name: &str) -> 
         Some(len) => {
             let progress = indicatif::ProgressBar::new(len);
             progress.set_prefix(display);
-            let mut cursor = Cursor::new(res.bytes().await?);
-            io::copy(&mut progress.wrap_read(&mut cursor), &mut f).unwrap();
+            while let Some(chunk) = res.chunk().await? {
+                f.write_all(&chunk)?;
+                progress.inc(chunk.len() as u64);
+            }
+            progress.finish();
         }
         None => {
             println!("will download: {}", display);
