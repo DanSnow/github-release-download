@@ -1,9 +1,9 @@
+use clap::Parser;
 use color_eyre::Result;
 use github_update::{download, github, GithubRelease};
 use reqwest::Client;
 use skim::prelude::{bounded, Skim, SkimItem};
 use std::{process, sync::Arc, thread};
-use structopt::StructOpt;
 
 macro_rules! abort {
     ($($args:tt)*) => {
@@ -12,22 +12,22 @@ macro_rules! abort {
     }
 }
 
-#[derive(Debug, StructOpt)]
+#[derive(Debug, Parser)]
 struct Opt {
-    #[structopt(short, long, help = "Allow pre-release version")]
+    #[clap(short, long, about = "Allow pre-release version")]
     pre_release: bool,
-    #[structopt(short, long, help = "Only select stable version")]
+    #[clap(short, long, about = "Only select stable version")]
     stable_only: bool,
-    #[structopt(
+    #[clap(
         short,
         long,
-        help = "Set the download file name, or it will be same as asset name"
+        about = "Set the download file name, or it will be same as asset name"
     )]
     output: Option<String>,
-    #[structopt(help = r#"Repoistory name, in "<user>/<repo>" form"#)]
+    #[clap(about = r#"Repoistory name, in "<user>/<repo>" form"#)]
     repo: String,
-    #[structopt(
-        help = r#"Tag name you want to download, or use "latest" to download lastest release"#,
+    #[clap(
+        about = r#"Tag name you want to download, or use "latest" to download lastest release"#,
         default_value = "latest"
     )]
     release: String,
@@ -35,7 +35,7 @@ struct Opt {
 
 #[tokio::main]
 async fn main() -> Result<()> {
-    let opt = Opt::from_args();
+    let opt = Opt::parse();
     let client = Client::new();
     let releases = GithubRelease::fetch(&client, &opt.repo).await?;
     let release = match opt.release.as_str() {
