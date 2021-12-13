@@ -14,20 +14,20 @@ macro_rules! abort {
 
 #[derive(Debug, Parser)]
 struct Opt {
-    #[clap(short, long, about = "Allow pre-release version")]
+    #[clap(short, long, help = "Allow pre-release version")]
     pre_release: bool,
-    #[clap(short, long, about = "Only select stable version")]
+    #[clap(short, long, help = "Only select stable version")]
     stable_only: bool,
     #[clap(
         short,
         long,
-        about = "Set the download file name, or it will be same as asset name"
+        help = "Set the download file name, or it will be same as asset name"
     )]
     output: Option<String>,
-    #[clap(about = r#"Repoistory name, in "<user>/<repo>" form"#)]
+    #[clap(help = r#"Repoistory name, in "<user>/<repo>" form"#)]
     repo: String,
     #[clap(
-        about = r#"Tag name you want to download, or use "latest" to download lastest release"#,
+        help = r#"Tag name you want to download, or use "latest" to download lastest release"#,
         default_value = "latest"
     )]
     release: String,
