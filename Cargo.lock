@@ -158,9 +158,9 @@ dependencies = [
 
 [[package]]
 name = "clap"
-version = "3.0.0"
+version = "3.0.4"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "d17bf219fcd37199b9a29e00ba65dfb8cd5b2688b7297ec14ff829c40ac50ca9"
+checksum = "d01c9347757e131122b19cd19a05c85805b68c2352a97b623efdc3c295290299"
 dependencies = [
  "atty",
  "bitflags",
@@ -588,7 +588,7 @@ name = "github-update"
 version = "0.2.0"
 dependencies = [
  "chrono",
- "clap 3.0.0",
+ "clap 3.0.4",
  "color-eyre",
  "dirs 4.0.0",
  "indicatif",
