@@ -141,6 +141,7 @@ dependencies = [
  "bitflags",
  "clap_lex 0.2.4",
  "indexmap",
+ "once_cell",
  "strsim",
  "termcolor",
  "textwrap",
@@ -1406,9 +1407,9 @@ checksum = "43b2853a4d09f215c24cc5489c992ce46052d359b5109343cbafbf26bc62f8a3"
 
 [[package]]
 name = "skim"
-version = "0.10.1"
+version = "0.10.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "513e7f65611c905027ae3b597b6ae7fe4bafa4a9b60cde7d92e93ca2e4d678e7"
+checksum = "cebed5f897cd6c0d80fbe30adb36c0abf7400e93043a63ae56458495642b3485"
 dependencies = [
  "atty",
  "beef",
