@@ -5,7 +5,7 @@ authors = ["DanSnow <dododavid006@gmail.com>"]
 edition = "2021"
 
 [dependencies]
-chrono = { version = "0.4.23", features = ["serde"] }
+chrono = { version = "0.4.24", features = ["serde"] }
 clap = { version = "4.1.8", features = ["derive"] }
 color-eyre = "0.6.2"
 dirs = "4.0.0"
