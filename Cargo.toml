@@ -6,7 +6,7 @@ edition = "2021"
 
 [dependencies]
 chrono = { version = "0.4.24", features = ["serde"] }
-clap = { version = "4.1.12", features = ["derive"] }
+clap = { version = "4.1.13", features = ["derive"] }
 color-eyre = "0.6.2"
 dirs = "4.0.0"
 indicatif = "0.17.3"
