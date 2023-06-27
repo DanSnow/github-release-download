@@ -17,7 +17,7 @@ serde = { version = "1.0.164", features = ["derive"] }
 serde_regex = "1.1.0"
 skim = "0.10.4"
 thiserror = "1.0.40"
-tokio = { version = "1.28.2", features = ["macros", "rt-multi-thread"] }
+tokio = { version = "1.29.0", features = ["macros", "rt-multi-thread"] }
 toml = "0.7.5"
 
 [[bin]]
