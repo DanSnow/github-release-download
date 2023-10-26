@@ -18,7 +18,7 @@ serde_regex = "1.1.0"
 skim = "0.10.4"
 thiserror = "1.0.50"
 tokio = { version = "1.33.0", features = ["macros", "rt-multi-thread"] }
-toml = "0.8.4"
+toml = "0.8.5"
 
 [[bin]]
 name = "grd"
