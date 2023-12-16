@@ -16,7 +16,7 @@ reqwest = { version = "0.11.22", features = ["json"] }
 serde = { version = "1.0.193", features = ["derive"] }
 serde_regex = "1.1.0"
 skim = "0.10.4"
-thiserror = "1.0.50"
+thiserror = "1.0.51"
 tokio = { version = "1.35.0", features = ["macros", "rt-multi-thread"] }
 toml = "0.8.8"
 
