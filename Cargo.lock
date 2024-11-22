@@ -1767,9 +1767,9 @@ checksum = "43b2853a4d09f215c24cc5489c992ce46052d359b5109343cbafbf26bc62f8a3"
 
 [[package]]
 name = "skim"
-version = "0.11.10"
+version = "0.11.11"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "06fcafc7fef4ed62feda484113903fc0ed1c4dd6ec5b2e9f6e71a1f24ab7f15c"
+checksum = "c3f12211a4d8c0182b827fe4e4b9bf168869f313805b0af4c0f0a3dcc11fefce"
 dependencies = [
  "atty",
  "beef",
