@@ -1,6 +1,7 @@
 use crate::github::Release;
-use reqwest::{header, Client, Error as HttpError, StatusCode};
+use http::{header, StatusCode};
 use thiserror::Error;
+use ureq::Error as HttpError;
 
 #[derive(Debug, Error)]
 pub enum Error {
@@ -15,17 +16,15 @@ pub struct GithubRelease {
 }
 
 impl GithubRelease {
-    pub async fn fetch(client: &Client, repo: &str) -> Result<Self, Error> {
+    pub fn fetch(repo: &str) -> Result<Self, Error> {
         let url = format!("https://api.github.com/repos/{}/releases", repo);
-        let res = client
-            .get(&url)
+        let mut res = ureq::get(&url)
             .header(header::USER_AGENT, "reqwest 0.11.3")
-            .send()
-            .await?;
+            .call()?;
         if res.status() == StatusCode::NOT_FOUND {
             return Err(Error::RepoNotFound(repo.to_owned()));
         }
-        let releases = res.json::<Vec<Release>>().await?;
+        let releases = res.body_mut().read_json::<Vec<Release>>()?;
         Ok(Self { releases })
     }
 

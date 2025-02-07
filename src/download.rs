@@ -1,15 +1,16 @@
 use color_eyre::Result;
-use reqwest::{header, Client};
-use std::{fs::File, io::Write};
+use http::header;
+use std::{
+    fs::File,
+    io::{self, Read, Write},
+};
 
-pub async fn download(client: &Client, url: &str, display: &str, name: &str) -> Result<()> {
+pub fn download(url: &str, display: &str, name: &str) -> Result<()> {
     let display = display.to_owned();
-    let mut res = client
-        .get(url)
-        .header(header::USER_AGENT, "reqwest 0.11.3")
+    let res = ureq::get(url)
+        .header(header::USER_AGENT, "ureq 3.0.4")
         .header(header::ACCEPT, "application/octet-stream")
-        .send()
-        .await?;
+        .call()?;
     let len = res.headers().get(header::CONTENT_LENGTH).and_then(|value| {
         value
             .to_str()
@@ -17,20 +18,25 @@ pub async fn download(client: &Client, url: &str, display: &str, name: &str) -> 
             .and_then(|value| value.parse::<u64>().ok())
     });
     let mut f = File::create(name).unwrap();
+    let mut body = res.into_body().into_reader();
     match len {
         Some(len) => {
             let progress = indicatif::ProgressBar::new(len);
             progress.set_prefix(display);
-            while let Some(chunk) = res.chunk().await? {
-                f.write_all(&chunk)?;
-                progress.inc(chunk.len() as u64);
+            let mut buf = vec![0; 4096];
+            loop {
+                let size = body.read(&mut buf)?;
+                if size == 0 {
+                    break;
+                }
+                f.write_all(&buf[..size])?;
+                progress.inc(size as u64);
             }
             progress.finish();
         }
         None => {
             println!("will download: {}", display);
-            let content = res.bytes().await?;
-            f.write_all(&content)?;
+            io::copy(&mut body, &mut f)?;
         }
     }
     Ok(())

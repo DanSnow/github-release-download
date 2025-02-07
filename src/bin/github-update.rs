@@ -3,7 +3,6 @@ use color_eyre::Result;
 use github_update::{download, GithubRelease};
 use once_cell::sync::Lazy;
 use regex::Regex;
-use reqwest::Client;
 use serde::{Deserialize, Serialize};
 use std::{
     env, fs,
@@ -39,11 +38,9 @@ struct Config {
     repos: Vec<Repo>,
 }
 
-#[tokio::main]
-async fn main() -> Result<()> {
+fn main() -> Result<()> {
     color_eyre::install()?;
     fs::create_dir_all(&*CONFIG_DIR)?;
-    let client = Client::new();
     let config_path = CONFIG_DIR.join("config.toml");
     if !config_path.exists() {
         fs::write(&config_path, EXAMPLE_CONFIG)?;
@@ -54,14 +51,14 @@ async fn main() -> Result<()> {
         let output = expand_tilde(&config.output).unwrap();
         env::set_current_dir(&output)?;
         for repo in config.repos.iter_mut() {
-            fetch_last_update(&client, repo).await?;
+            fetch_last_update(repo)?;
         }
         fs::write(&config_path, toml::to_string_pretty(&config).unwrap())?;
     }
     Ok(())
 }
 
-async fn fetch_last_update(client: &Client, target: &mut Repo) -> Result<()> {
+fn fetch_last_update(target: &mut Repo) -> Result<()> {
     if let Some(ref time) = target.last_update {
         let interval = Local::now() - *time;
         if interval.num_days() < 30 {
@@ -70,7 +67,7 @@ async fn fetch_last_update(client: &Client, target: &mut Repo) -> Result<()> {
         }
     }
     println!("Checking {}", target.repo);
-    let releases = GithubRelease::fetch(client, &target.repo).await?;
+    let releases = GithubRelease::fetch(&target.repo)?;
     let release = releases.latest(target.pre_release, target.stable_only);
     match release {
         Some(release) => {
@@ -90,7 +87,7 @@ async fn fetch_last_update(client: &Client, target: &mut Repo) -> Result<()> {
                     .as_ref()
                     .map(String::as_str)
                     .unwrap_or(&asset.name);
-                download(&client, &asset.url, &asset.name, output_name).await?;
+                download(&asset.url, &asset.name, output_name)?;
                 target.last_version = Some(release.tag_name.clone());
                 target.last_update = Some(Local::now());
                 println!("Download update {} as {}", target.repo, output_name);

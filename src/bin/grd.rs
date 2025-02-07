@@ -1,7 +1,6 @@
 use clap::Parser;
 use color_eyre::Result;
 use github_update::{download, github, GithubRelease};
-use reqwest::Client;
 use skim::prelude::{bounded, Skim, SkimItem};
 use std::{process, sync::Arc, thread};
 
@@ -27,17 +26,15 @@ struct Opt {
     #[arg(help = r#"Repoistory name, in "<user>/<repo>" form"#)]
     repo: String,
     #[arg(
-        help = r#"Tag name you want to download, or use "latest" to download lastest release"#,
+        help = r#"Tag name you want to download, or use "latest" to download latest release"#,
         default_value = "latest"
     )]
     release: String,
 }
 
-#[tokio::main]
-async fn main() -> Result<()> {
+fn main() -> Result<()> {
     let opt = Opt::parse();
-    let client = Client::new();
-    let releases = GithubRelease::fetch(&client, &opt.repo).await?;
+    let releases = GithubRelease::fetch(&opt.repo)?;
     let release = match opt.release.as_str() {
         "latest" => releases.latest(opt.pre_release, opt.stable_only),
         tag => releases.find_tag(tag),
@@ -58,7 +55,7 @@ async fn main() -> Result<()> {
                         .as_ref()
                         .map(String::as_str)
                         .unwrap_or(&asset.name);
-                    download(&client, &asset.url, &asset.name, output_name).await?;
+                    download(&asset.url, &asset.name, output_name)?;
                 }
                 None => (),
             }
