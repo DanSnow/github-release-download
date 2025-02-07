@@ -1,8 +1,8 @@
 use clap::Parser;
 use color_eyre::Result;
-use github_update::{download, github, GithubRelease};
-use skim::prelude::{bounded, Skim, SkimItem};
-use std::{process, sync::Arc, thread};
+use github_update::{download, github::Renderable, GithubRelease};
+use nucleo_picker::PickerOptions;
+use std::process;
 
 macro_rules! abort {
     ($($args:tt)*) => {
@@ -23,7 +23,7 @@ struct Opt {
         help = "Set the download file name, or it will be same as asset name"
     )]
     output: Option<String>,
-    #[arg(help = r#"Repoistory name, in "<user>/<repo>" form"#)]
+    #[arg(help = r#"Repository name, in "<user>/<repo>" form"#)]
     repo: String,
     #[arg(
         help = r#"Tag name you want to download, or use "latest" to download latest release"#,
@@ -41,13 +41,7 @@ fn main() -> Result<()> {
     };
     match release {
         Some(release) => {
-            let asset = select_one(release.assets.clone()).map(|item| {
-                (*item)
-                    .as_any()
-                    .downcast_ref::<github::Asset>()
-                    .expect("Fail to downcast asset")
-                    .clone()
-            });
+            let asset = select_one(release.assets.clone());
             match asset {
                 Some(asset) => {
                     let output_name = opt
@@ -67,21 +61,15 @@ fn main() -> Result<()> {
     Ok(())
 }
 
-fn select_one<T: SkimItem, I: IntoIterator<Item = T>>(items: I) -> Option<Arc<dyn SkimItem>> {
-    let items = items
-        .into_iter()
-        .map(|x| Arc::new(x) as Arc<dyn SkimItem>)
-        .collect::<Vec<Arc<dyn SkimItem>>>();
-    let (tx, rx) = bounded(10240);
-    thread::spawn(move || {
-        for item in items {
-            if tx.send(item).is_err() {
-                break;
-            }
-        }
-    });
-    let items = Skim::run_with(&skim::SkimOptions::default(), Some(rx))
-        .map(|output| output.selected_items)
-        .unwrap_or_else(Vec::new);
-    items.into_iter().next()
+fn select_one<T: Renderable + Clone + Send + Sync + 'static, I: IntoIterator<Item = T>>(
+    items: I,
+) -> Option<T> {
+    let render = T::get_render();
+    let mut picker = PickerOptions::default().picker(render);
+    let injector = picker.injector();
+
+    for item in items {
+        injector.push(item)
+    }
+    picker.pick().expect("Fail to pick").cloned()
 }
