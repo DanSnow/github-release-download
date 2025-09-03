@@ -487,7 +487,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "33d852cb9b869c2a9b3df2f71a3074817f01e1844f839a144f5fcef059a4eb5d"
 dependencies = [
  "libc",
- "windows-sys 0.52.0",
+ "windows-sys 0.59.0",
 ]
 
 [[package]]
@@ -969,9 +969,9 @@ dependencies = [
 
 [[package]]
 name = "nucleo-picker"
-version = "0.8.1"
+version = "0.9.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "2c888de8c3322339aa9057c44752c3549179a6ca3a59a6e0b8ae8c54238e75a2"
+checksum = "512cf86db60feedc18301adfd77f78bd0ba60bd67649635429a584aea7a2d8fe"
 dependencies = [
  "crossterm",
  "memchr",
